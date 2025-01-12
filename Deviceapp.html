@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .timestamp {
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Device Tracker</h1>
+        <p id="device-info">Fetching your device details...</p>
+        <p class="timestamp" id="timestamp"></p>
+        <button id="send-now">Send Now</button>
+    </div>
+
+    <script>
+        async function fetchDeviceDetails() {
+            // Fetch device name and OS details
+            const deviceName = navigator.userAgent;
+            const os = navigator.platform;
+            const timestamp = new Date().toISOString();
+
+            // Update the UI with fetched data
+            document.getElementById('device-info').textContent = `Device: ${deviceName}, OS: ${os}`;
+            document.getElementById('timestamp').textContent = `Last fetched at: ${timestamp}`;
+
+            // Send data to Google Sheets
+            await sendToGoogleSheet({ timestamp, deviceName, os });
+        }
+
+        async function sendToGoogleSheet(data) {
+            try {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbxY-Z8AcDiXdMykE3C7Uq1JHy5VidW4ropcm5ZDhJ8CfG26Y1D_gs0fEQumpipFPaWF/exec', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to send data to Google Sheets:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Fetch device details immediately on load
+        fetchDeviceDetails();
+
+        // Set up a timer to fetch and update data every 24 hours
+        setInterval(fetchDeviceDetails, 24 * 60 * 60 * 1000);
+
+        // Add event listener to "Send Now" button
+        document.getElementById('send-now').addEventListener('click', fetchDeviceDetails);
+    </script>
+</body>
+</html>
